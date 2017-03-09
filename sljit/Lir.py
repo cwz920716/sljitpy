@@ -9,12 +9,18 @@ import llvmlite.llvmpy.passes as lp
 
 from . import cgutils 
 
+def char(i):
+    return ir.Constant(cgutils.int8_t, ord(i))
+
 def int32(i):
     return ir.Constant(cgutils.int32_t, i)
 
+def int64(i):
+    return ir.Constant(cgutils.int64_t, i)
+
 class LLVMCodeGenerator(object):
     def __init__(self):
-        self.module = ir.Module()
+        self.module = lc.Module()
         # Current IR builder.
         self.builder = None
         self.func = None
@@ -33,8 +39,8 @@ class LLVMCodeGenerator(object):
         builder.position_at_start(self.builder.function.entry_basic_block)
         return builder.alloca(ty, size=None, name=name)
 
-    def alloca_once(self, name, ty):
-        return cgutils.alloca_once(self.builder, ty, name=name)
+    def alloca_once(self, name, ty, size=None):
+        return cgutils.alloca_once(self.builder, ty, size=size, name=name)
 
     def emit_enter(self, name):
         self.func_symtab = {}
@@ -48,9 +54,45 @@ class LLVMCodeGenerator(object):
         self.builder.store(src, dst)
         return
 
+    def emit_gep(self, base, indices, inbounds=False, name=''):
+        assert cgutils.is_pointer(base.type)
+        return self.builder.gep(base, indices, inbounds=False, name='')
+
+    def emit_printf(self, fmt, *args):
+        return cgutils.printf(self.builder, fmt, *args)
+
     def emit_load(self, src, dst_name=''):
         assert cgutils.is_pointer(src.type)
         return self.builder.load(src, name=dst_name)
+
+    def reg_read(self, vreg):
+        return self.emit_load(vreg)
+
+    def reg_write(self, vreg, value):
+        self.emit_store(vreg, value)
+
+    def emit_lea(self, base_r, immd_i=0, idx_r=None):
+        assert cgutils.is_pointer(base_r.type)
+        base = self.reg_read(base_r)
+        immd = int32(immd_i)
+        assert cgutils.is_pointer(base.type)
+        if idx_r is not None:
+            assert cgutils.is_pointer(idx_r.type)
+            idx = self.reg_read(idx_r)
+            assert not cgutils.is_pointer(idx.type)
+            offset = self.builder.shl(idx, immd)
+        else:
+            offset = immd
+        ptr = self.builder.gep(base, [offset])
+        return ptr
+
+    def mem_read(self, base_r, immd_i=0, idx_r=None):
+        ptr = self.emit_lea(base_r, immd_i=immd_i, idx_r=idx_r)
+        return self.emit_load(ptr)
+
+    def mem_write(self, value, base_r, immd_i=0, idx_r=None):
+        ptr = self.emit_lea(base_r, immd_i=immd_i, idx_r=idx_r)
+        return self.emit_store(ptr, value)
 
     """
         MOV supports following mode:
@@ -67,10 +109,36 @@ class LLVMCodeGenerator(object):
            even if dst and src are two registers in Lir, they are modeled as allocated stack slot in LLVM, i.e., a pointer
         """
         assert cgutils.is_pointer(dst.type) and cgutils.is_pointer(src.type) 
+        assert ty1 is None or ty2 is None
         if ty1 is None and ty2 is None:
-            val = self.emit_load(src, dst_name='mov_src')
-            self.emit_store(dst, val)
+            val = self.reg_read(src)
+            self.reg_write(dst, val)
             return
+        if ty1 is not None:
+            # a memory write happens
+            immd = ty1[0]
+            idx = ty1[1]
+            tmp = self.reg_read(src)
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            # a reg read from a memory
+            immd = ty1[0]
+            idx = ty1[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+            self.reg_write(dst, tmp)
+        return
+
+    def emit_LEA(self, dst, src, ty=None):
+        assert cgutils.is_pointer(dst.type) and cgutils.is_pointer(src.type) 
+        if ty is None:
+            val = self.reg_read(src)
+            self.reg_write(dst, val)
+            return
+        else:
+            immd = ty[0]
+            idx = ty[1]
+            addr = self.emit_lea(src, immd_i=immd, idx_r=idx)
+            self.reg_write(dst, addr)
         return
 
     def emit_exit(self, retval):
