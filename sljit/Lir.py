@@ -109,11 +109,17 @@ class LLVMCodeGenerator(object):
            even if dst and src are two registers in Lir, they are modeled as allocated stack slot in LLVM, i.e., a pointer
         """
         assert cgutils.is_pointer(dst.type) and cgutils.is_pointer(src.type) 
-        assert ty1 is None or ty2 is None
         if ty1 is None and ty2 is None:
             val = self.reg_read(src)
             self.reg_write(dst, val)
             return
+        if ty1 is not None and ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
         if ty1 is not None:
             # a memory write happens
             immd = ty1[0]
@@ -122,10 +128,20 @@ class LLVMCodeGenerator(object):
             self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
         else:
             # a reg read from a memory
-            immd = ty1[0]
-            idx = ty1[1]
+            immd = ty2[0]
+            idx = ty2[1]
             tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
             self.reg_write(dst, tmp)
+        return
+
+    def emit_MOVI(self, dst, src, ty1=None):
+        assert cgutils.is_pointer(dst.type)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(src, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, src)
         return
 
     def emit_LEA(self, dst, src, ty=None):
@@ -141,6 +157,36 @@ class LLVMCodeGenerator(object):
             self.reg_write(dst, addr)
         return
 
+    def emit_NOT(self, dst, src, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        tmp2 = self.builder.not_(tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_NEG(self, dst, src, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        tmp2 = self.builder.neg(tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
     def emit_exit(self, retval):
         self.builder.ret(retval)
         return
@@ -155,7 +201,7 @@ class LirEvaluator(object):
         self.codegen = LLVMCodeGenerator()
         self.target = llvm.Target.from_default_triple()
 
-    def jit(self, name, *args, optimize=True, llvmdump=True):
+    def jit(self, name, *args, optimize=False, llvmdump=True):
         if llvmdump:
             print('======== Unoptimized LLVM IR')
             print(str(self.codegen.module))
