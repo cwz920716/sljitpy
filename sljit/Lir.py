@@ -12,6 +12,9 @@ from . import cgutils
 def char(i):
     return ir.Constant(cgutils.int8_t, ord(i))
 
+def int8(i):
+    return ir.Constant(cgutils.int8_t, i)
+
 def int32(i):
     return ir.Constant(cgutils.int32_t, i)
 
@@ -186,6 +189,436 @@ class LLVMCodeGenerator(object):
             self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
         else:
             self.reg_write(dst, tmp2)
+
+    def emit_ADD(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.add(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_SUB(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.sub(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_MUL(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.mul(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_SDIV(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.sdiv(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_UDIV(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.udiv(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_AND(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.and_(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_OR(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.or_(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_XOR(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.xor(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_SHL(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.shl(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_LSHR(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.lshr(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_ASHR(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.ashr(tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_ADDI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.add(tmp, immd)
+        else:
+            tmp2 = self.builder.add(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_SUBI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.sub(tmp, immd)
+        else:
+            tmp2 = self.builder.sub(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_MULI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.mul(tmp, immd)
+        else:
+            tmp2 = self.builder.mul(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_SDIVI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.sdiv(tmp, immd)
+        else:
+            tmp2 = self.builder.sdiv(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_UDIVI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.udiv(tmp, immd)
+        else:
+            tmp2 = self.builder.udiv(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_ANDI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.and_(tmp, immd)
+        else:
+            tmp2 = self.builder.and_(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_ORI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.or_(tmp, immd)
+        else:
+            tmp2 = self.builder.or_(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_XORI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.xor(tmp, immd)
+        else:
+            tmp2 = self.builder.xor(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_SHLI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.shl(tmp, immd)
+        else:
+            tmp2 = self.builder.shl(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_LSHRI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.lshr(tmp, immd)
+        else:
+            tmp2 = self.builder.lshr(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+
+    def emit_ASHRI(self, dst, src, immd, norm=True, ty1=None, ty2=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tmp = self.mem_read(src, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(src)
+        if norm:
+            tmp2 = self.builder.ashr(tmp, immd)
+        else:
+            tmp2 = self.builder.ashr(immd, tmp)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp2, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp2)
+        
 
     def emit_exit(self, retval):
         self.builder.ret(retval)
