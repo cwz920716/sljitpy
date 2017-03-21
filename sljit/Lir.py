@@ -295,6 +295,67 @@ class LLVMCodeGenerator(object):
         else:
             self.reg_write(dst, tmp)
 
+    def emit_ICMP_Signed(self, dst, cmpop, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.icmp_signed(cmpop, tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    def emit_ICMP_Unigned(self, dst, cmpop, lhs, rhs, ty1=None, ty2=None, ty3=None):
+        if ty2 is not None:
+            immd = ty2[0]
+            idx = ty2[1]
+            tl = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tl = self.reg_read(lhs)
+        if ty3 is not None:
+            immd = ty3[0]
+            idx = ty3[1]
+            tr = self.mem_read(rhs, immd_i=immd, idx_r=idx)
+        else:
+            tr = self.reg_read(rhs)
+        tmp = self.builder.icmp_unsigned(cmpop, tl, tr)
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
+        else:
+            self.reg_write(dst, tmp)
+
+    """
+       create a new block with label and then jump to the new block
+       Bookkeeping the label, if the label-Block is already created, append to the block
+    """
+    def emit_Label(self, label):
+        pass
+
+    """
+       emit a jump to the label, if the label is not present, create a basic block with the label
+    """
+    def emit_jmp(self, label):
+        pass
+
+    """
+       emit a conditional jump to the label, if the label is not present, create a basic block with the label
+    """
+    def emit_jmp_if(self, cond, label, else_label):
+        pass
+
     def emit_AND(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
         if ty2 is not None:
             immd = ty2[0]
