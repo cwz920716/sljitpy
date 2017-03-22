@@ -28,6 +28,7 @@ class LLVMCodeGenerator(object):
         self.builder = None
         self.func = None
         self.func_symtab = {}
+        self.bbs = {}
 
     def _emit_prototype(self, name):
         # emit the prototype
@@ -49,6 +50,7 @@ class LLVMCodeGenerator(object):
         self.func_symtab = {}
         self.func = self._emit_prototype(name)
         bb_entry = self.func.append_basic_block('entry')
+        self.bbs['entry'] = bb_entry
         self.builder = ir.IRBuilder(bb_entry)
         return
 
@@ -315,6 +317,20 @@ class LLVMCodeGenerator(object):
             self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
         else:
             self.reg_write(dst, tmp)
+        return tmp
+
+    def emit_ICMPI_Signed(self, cmpop, lhs, immd, norm=True, ty1=None):
+        if ty1 is not None:
+            immd = ty1[0]
+            idx = ty1[1]
+            tmp = self.mem_read(lhs, immd_i=immd, idx_r=idx)
+        else:
+            tmp = self.reg_read(lhs)
+        if norm:
+            tmp2 = self.builder.icmp_signed(cmpop, tmp, immd)
+        else:
+            tmp2 = self.builder.icmp_signed(cmpop, immd, tmp)
+        return tmp2
 
     def emit_ICMP_Unigned(self, dst, cmpop, lhs, rhs, ty1=None, ty2=None, ty3=None):
         if ty2 is not None:
@@ -336,25 +352,51 @@ class LLVMCodeGenerator(object):
             self.mem_write(tmp, dst, immd_i=immd, idx_r=idx)
         else:
             self.reg_write(dst, tmp)
+        return tmp
 
     """
        create a new block with label and then jump to the new block
        Bookkeeping the label, if the label-Block is already created, append to the block
     """
     def emit_Label(self, label):
-        pass
+        if label in self.bbs:
+            # raise ValueError('Label %s already exists!' % (label))
+            next_bb = self.bbs[label]
+            self.builder.function.basic_blocks.append(next_bb)
+        else:
+            next_bb = self.builder.function.append_basic_block(label)
+            self.bbs[label] = next_bb
+        self.builder.branch(next_bb)
+        self.builder.position_at_start(next_bb)
+        return
 
     """
        emit a jump to the label, if the label is not present, create a basic block with the label
     """
-    def emit_jmp(self, label):
-        pass
+    def emit_JMP(self, label):
+        if label not in self.bbs:
+            target = ir.Block(self.builder.function, label)
+            self.bbs[label] = target
+        else:
+            target = self.bbs[label]
+        fall_bb = self.builder.function.append_basic_block('fallthrough')
+        self.builder.branch(target)
+        self.builder.position_at_start(fall_bb)
+        return
 
     """
        emit a conditional jump to the label, if the label is not present, create a basic block with the label
     """
-    def emit_jmp_if(self, cond, label, else_label):
-        pass
+    def emit_BR(self, cond, label, else_label='fallthrough'):
+        if label not in self.bbs:
+            target = ir.Block(self.builder.function, label)
+            self.bbs[label] = target
+        else:
+            target = self.bbs[label]
+        fall_bb = self.builder.function.append_basic_block(else_label)
+        self.builder.cbranch(cond, target, fall_bb)
+        self.builder.position_at_start(fall_bb)
+        return
 
     def emit_AND(self, dst, lhs, rhs, ty1=None, ty2=None, ty3=None):
         if ty2 is not None:
